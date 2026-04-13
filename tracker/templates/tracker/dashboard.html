@@ -1,0 +1,98 @@
+{% extends 'tracker/base.html' %}
+
+{% block content %}
+<h2>AI-Powered Personal Finance Dashboard</h2>
+
+<div class="cards">
+    <div class="card income">
+        Total Income <br> ₹{{ total_income }}
+    </div>
+    <div class="card expense">
+        Total Expense <br> ₹{{ total_expense }}
+    </div>
+    <div class="card balance">
+        Balance <br> ₹{{ balance }}
+    </div>
+</div>
+
+<div class="panel">
+    <form method="get" style="margin-bottom: 0;">
+        <label for="type">Filter by Type:</label>
+        <select name="type" id="type">
+            <option value="">All</option>
+            <option value="income" {% if request.GET.type == "income" %}selected{% endif %}>Income</option>
+            <option value="expense" {% if request.GET.type == "expense" %}selected{% endif %}>Expense</option>
+        </select>
+        <br><br>
+        <button type="submit" class="btn">Filter</button>
+    </form>
+</div>
+
+<div class="panel">
+    <h3>Income vs Expense Chart</h3>
+    <div style="width: 400px; height: 400px; margin: auto;">
+        <canvas id="expenseChart"></canvas>
+    </div>
+</div>
+
+<h3>All Transactions</h3>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Amount</th>
+        <th>Type</th>
+        <th>Category</th>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Action</th>
+    </tr>
+
+    {% for transaction in transactions %}
+    <tr>
+        <td>{{ transaction.id }}</td>
+        <td>₹{{ transaction.amount }}</td>
+        <td>{{ transaction.type }}</td>
+        <td>{{ transaction.category }}</td>
+        <td>{{ transaction.date }}</td>
+        <td>{{ transaction.description }}</td>
+        <td>
+            <a class="btn" href="{% url 'edit_transaction' transaction.id %}">Edit</a>
+            <a class="delete-btn" href="{% url 'delete_transaction' transaction.id %}" onclick="return confirm('Are you sure you want to delete this transaction?')">Delete</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="7">No transactions added yet.</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const labels = JSON.parse('{{ chart_labels|escapejs }}');
+    const data = JSON.parse('{{ chart_data|escapejs }}');
+
+    const ctx = document.getElementById('expenseChart');
+
+    new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: labels,
+        datasets: [{
+            data: data,
+            backgroundColor: ['#dcceff', '#D9B573']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
